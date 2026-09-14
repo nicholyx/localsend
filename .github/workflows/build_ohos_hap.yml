@@ -168,17 +168,32 @@ jobs:
           OHOS_SIGN_STORE_PASSWORD: ${{ secrets.OHOS_SIGN_STORE_PASSWORD }}
         run: |
           set -euo pipefail
-          if [ -z "$OHOS_SIGN_P12_BASE64" ]; then
-            echo "No signing material configured - building an UNSIGNED HAP."
+          if [ -n "$OHOS_SIGN_P12_BASE64" ]; then
+            echo "Using AGC signing material from secrets."
+            python3 support/scripts/configure_ohos_signing.py \
+              --p12 <(echo "$OHOS_SIGN_P12_BASE64" | base64 -d) \
+              --cert <(echo "$OHOS_SIGN_CERT_BASE64" | base64 -d) \
+              --profile <(echo "$OHOS_SIGN_P7B_BASE64" | base64 -d) \
+              --key-alias "$OHOS_SIGN_KEY_ALIAS" \
+              --key-password "$OHOS_SIGN_KEY_PASSWORD" \
+              --store-password "$OHOS_SIGN_STORE_PASSWORD"
             exit 0
           fi
+          echo "No AGC signing material configured - generating a LOCAL self-signed debug set."
+          # Debug HAPs require a signing config, so without AGC material we
+          # self-sign with the hap-sign-tool from the Command Line Tools.
+          chmod +x support/scripts/generate_ohos_debug_signing.sh
+          support/scripts/generate_ohos_debug_signing.sh \
+            --sign-tool "$HOS_SDK_HOME/toolchains/lib/hap-sign-tool.jar" \
+            --bundle-name "org.localsend.localsend_app" \
+            --out-dir /tmp/ohos-signing
           python3 support/scripts/configure_ohos_signing.py \
-            --p12 <(echo "$OHOS_SIGN_P12_BASE64" | base64 -d) \
-            --cert <(echo "$OHOS_SIGN_CERT_BASE64" | base64 -d) \
-            --profile <(echo "$OHOS_SIGN_P7B_BASE64" | base64 -d) \
-            --key-alias "$OHOS_SIGN_KEY_ALIAS" \
-            --key-password "$OHOS_SIGN_KEY_PASSWORD" \
-            --store-password "$OHOS_SIGN_STORE_PASSWORD"
+            --p12 /tmp/ohos-signing/signing.p12 \
+            --cert /tmp/ohos-signing/signing.cer \
+            --profile /tmp/ohos-signing/signing.p7b \
+            --key-alias "app" \
+            --key-password "localsend123" \
+            --store-password "localsend123"
 
       - name: "Debug: cargo check for the ohos target"
         working-directory: packages/localsend_isolates/rust
