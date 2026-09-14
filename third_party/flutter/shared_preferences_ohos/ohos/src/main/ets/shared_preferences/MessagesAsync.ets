@@ -312,7 +312,7 @@ export function setupSharedPreferencesAsyncApi(binaryMessenger: BinaryMessenger,
           const optionsArg = SharedPreferencesPigeonOptions.decode(args[1] as Array<Object>);
 
           api.getString(keyArg, optionsArg).then((result) => {
-            wrapped.push(result);
+            wrapped.push(result as Object);
             reply.reply(wrapped);
           }).catch((err: Error) => {
             Log.w(TAG, "Failed to getString. message =" + err.message);
@@ -339,7 +339,7 @@ export function setupSharedPreferencesAsyncApi(binaryMessenger: BinaryMessenger,
           const optionsArg = SharedPreferencesPigeonOptions.decode(args[1] as Array<Object>);
 
           api.getBool(keyArg, optionsArg).then((result) => {
-            wrapped.push(result);
+            wrapped.push(result as Object);
             reply.reply(wrapped);
           }).catch((err: Error) => {
             Log.w(TAG, "Failed to getBool. message =" + err.message);
@@ -366,7 +366,7 @@ export function setupSharedPreferencesAsyncApi(binaryMessenger: BinaryMessenger,
           const optionsArg = SharedPreferencesPigeonOptions.decode(args[1] as Array<Object>);
 
           api.getDouble(keyArg, optionsArg).then((result) => {
-            wrapped.push(result);
+            wrapped.push(result as Object);
             reply.reply(wrapped);
           }).catch((err: Error) => {
             Log.w(TAG, "Failed to getDouble. message =" + err.message);
@@ -393,7 +393,7 @@ export function setupSharedPreferencesAsyncApi(binaryMessenger: BinaryMessenger,
           const optionsArg = SharedPreferencesPigeonOptions.decode(args[1] as Array<Object>);
 
           api.getInt(keyArg, optionsArg).then((result) => {
-            wrapped.push(result);
+            wrapped.push(result as Object);
             reply.reply(wrapped);
           }).catch((err: Error) => {
             Log.w(TAG, "Failed to getInt. message =" + err.message);
@@ -420,7 +420,7 @@ export function setupSharedPreferencesAsyncApi(binaryMessenger: BinaryMessenger,
           const optionsArg = SharedPreferencesPigeonOptions.decode(args[1] as Array<Object>);
 
           api.getPlatformEncodedStringList(keyArg, optionsArg).then((result) => {
-            wrapped.push(result);
+            wrapped.push(result as Object);
             reply.reply(wrapped);
           }).catch((err: Error) => {
             Log.w(TAG, "Failed to getPlatformEncodedStringList. message =" + err.message);
@@ -447,7 +447,7 @@ export function setupSharedPreferencesAsyncApi(binaryMessenger: BinaryMessenger,
           const optionsArg = SharedPreferencesPigeonOptions.decode(args[1] as Array<Object>);
 
           api.getStringList(keyArg, optionsArg).then((result) => {
-            wrapped.push(result);
+            wrapped.push(result as Object);
             reply.reply(wrapped);
           }).catch((err: Error) => {
             Log.w(TAG, "Failed to getStringList. message =" + err.message);
@@ -505,7 +505,7 @@ export function setupSharedPreferencesAsyncApi(binaryMessenger: BinaryMessenger,
               const errs = wrapError(error);
               reply.reply(errs);
             } else {
-              wrapped.push(result);
+              wrapped.push(result as Object);
               reply.reply(wrapped);
             }
           }).catch((err: Error) => {
@@ -538,7 +538,7 @@ export function setupSharedPreferencesAsyncApi(binaryMessenger: BinaryMessenger,
               const errs = wrapError(error);
               reply.reply(errs);
             } else {
-              wrapped.push(result);
+              wrapped.push(result as Object);
               reply.reply(wrapped);
             }
           }).catch((err: Error) => {

@@ -105,11 +105,17 @@ export default class PathProviderPlugin extends PathProviderApi implements Flutt
   }
 
   private getApplicationSupportDirectory(): string {
-    return PathUtils.getFilesDir(this.context);
+    if (this.context) {
+      return PathUtils.getFilesDir(this.context);
+    }
+    return "";
   }
 
   private getPathProviderApplicationDocumentsDirectory(): string {
-    return PathUtils.getDataDirectory(this.context) ?? "";
+    if (this.context) {
+      return PathUtils.getDataDirectory(this.context) ?? "";
+    }
+    return "";
   }
 
   private getPathProviderStorageDirectory(): string {

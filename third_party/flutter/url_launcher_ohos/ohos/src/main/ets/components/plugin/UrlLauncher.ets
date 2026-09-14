@@ -302,7 +302,9 @@ export class UrlLauncher implements UrlLauncherApi {
       });
       return false;
     }
-      let harmonyBrowserPage = headers.get('harmony_browser_page');
+      // headers.has('harmony_browser_page') is checked above, so the value
+      // is present; cast away the nullable Map.get result for ArkTS strict checks.
+      let harmonyBrowserPage = headers.get('harmony_browser_page') as string;
       router.pushUrl({ url: harmonyBrowserPage, params: {'url': url, 'options': options,'my_header_key':my_header_key} }).catch((error: BusinessError) => {
         Log.e(TAG, 'Failed to open url: ', harmonyBrowserPage, ', Error: ', JSON.stringify(error));
         if (error.code == 100002) {
