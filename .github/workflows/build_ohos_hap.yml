@@ -184,7 +184,7 @@ jobs:
         working-directory: packages/localsend_isolates/rust
         env:
           CC_aarch64_unknown_linux_ohos: ${{ env.COMMANDLINE_TOOL_DIR }}/sdk/default/openharmony/native/llvm/bin/clang
-          CFLAGS_aarch64_unknown_linux_ohos: --sysroot=${{ env.COMMANDLINE_TOOL_DIR }}/sdk/default/openharmony/sysroot --target=aarch64-unknown-linux-ohos
+          CFLAGS_aarch64_unknown_linux_ohos: --sysroot=${{ env.COMMANDLINE_TOOL_DIR }}/sdk/default/openharmony/native/sysroot --target=aarch64-unknown-linux-ohos
         run: |
           set +e
           cargo check --target aarch64-unknown-linux-ohos 2>&1
