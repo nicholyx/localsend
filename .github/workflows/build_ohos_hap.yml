@@ -33,11 +33,10 @@ env:
   OHOS_FLUTTER_BRANCH: oh-3.41.9-dev
   # Command Line Tools (hvigor, ohpm, node, HarmonyOS SDK) from a community
   # mirror because Huawei's official download requires an authenticated
-  # session. For production use, host your own mirror and point
-  # OHOS_TOOLS_MIRROR at it.
+  # session. For production use, host your own mirror and update the
+  # download step below.
   OHOS_TOOLS_VERSION: 6.1.0.830
   OHOS_TOOLS_BASENAME: commandline-tools-linux-x64-6.1.0.830
-  OHOS_TOOLS_MIRROR: https://raw.githubusercontent.com/xiaobingtech/commandline-tools-linux-x64-6.1.0.830/refs/heads/main
   OHOS_TOOLS_HOME: ${{ github.workspace }}/ohos-tools
   OHOS_FLUTTER_HOME: ${{ github.workspace }}/flutter-ohos
 
@@ -79,30 +78,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$OHOS_TOOLS_HOME" /tmp/ohos-tools-split
-          cd /tmp/ohos-tools-split
-          volumes=0
-          for i in $(seq -w 1 30); do
-            FILE="${OHOS_TOOLS_BASENAME}.7z.${i}"
-            for attempt in 1 2 3; do
-              if curl -fsSL --max-time 300 "$OHOS_TOOLS_MIRROR/$FILE" -o "$FILE"; then
-                volumes=$((volumes + 1))
-                echo "Downloaded $FILE"
-                break
-              fi
-              rm -f "$FILE"
-              if [ "$attempt" = 3 ]; then
-                # First volume missing is fatal; any other missing volume ends the split archive.
-                if [ "$volumes" -eq 0 ]; then
-                  echo "::error::Could not download the first Command Line Tools volume" >&2
-                  exit 1
-                fi
-                break 2
-              fi
-              echo "Retry $attempt for $FILE failed, retrying..."
-              sleep 5
-            done
-          done
-          echo "Downloaded $volumes volumes."
+          # One single codeload request instead of 20 raw.githubusercontent
+          # requests: raw throttles anonymous traffic from Actions runners.
+          curl -fL --retry 5 --retry-delay 10 --max-time 1800 \
+            "https://codeload.github.com/xiaobingtech/commandline-tools-linux-x64-6.1.0.830/tar.gz/refs/heads/main" \
+            -o /tmp/ohos-tools.tar.gz
+          tar -xzf /tmp/ohos-tools.tar.gz -C /tmp/ohos-tools-split
+          cd /tmp/ohos-tools-split/*/
           cat "${OHOS_TOOLS_BASENAME}.7z."* > "${OHOS_TOOLS_BASENAME}.7z"
           7z x -y -o"$OHOS_TOOLS_HOME" "${OHOS_TOOLS_BASENAME}.7z" > /dev/null
           find "$OHOS_TOOLS_HOME" -maxdepth 1 -mindepth 1
