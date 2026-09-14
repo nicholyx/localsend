@@ -182,9 +182,14 @@ jobs:
           echo "No AGC signing material configured - generating a LOCAL self-signed debug set."
           # Debug HAPs require a signing config, so without AGC material we
           # self-sign with the hap-sign-tool from the Command Line Tools.
+          SIGN_TOOL=$(find "$HOS_SDK_HOME" -name "hap-sign-tool.jar" | head -1)
+          if [ -z "$SIGN_TOOL" ]; then
+            echo "::error::hap-sign-tool.jar not found under $HOS_SDK_HOME" >&2
+            exit 1
+          fi
           chmod +x support/scripts/generate_ohos_debug_signing.sh
           support/scripts/generate_ohos_debug_signing.sh \
-            --sign-tool "$HOS_SDK_HOME/toolchains/lib/hap-sign-tool.jar" \
+            --sign-tool "$SIGN_TOOL" \
             --bundle-name "org.localsend.localsend_app" \
             --out-dir /tmp/ohos-signing
           python3 support/scripts/configure_ohos_signing.py \
