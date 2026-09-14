@@ -147,6 +147,10 @@ For more information on the LocalSend Protocol, see the [documentation](https://
 
 ![Dependency hierarchy](support/docs/dependency-hierarchy.svg)
 
+## HarmonyOS Port
+
+This fork adds a HarmonyOS (OHOS) target built with the [flutter-ohos](https://gitcode.com/openharmony-tpc/flutter_flutter) tooling: app shell in `app/ohos/`, vendored OHOS plugin implementations in `third_party/flutter/`, and cargokit support for the `aarch64-unknown-linux-ohos` Rust target. See [docs/HARMONYOS.md](docs/HARMONYOS.md) for architecture, building, CI packaging and known limitations. WebRTC is currently unavailable on this platform.
+
 ## Getting Started
 
 To compile LocalSend from the source code, follow these steps:
