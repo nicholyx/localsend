@@ -70,21 +70,19 @@ require reviewed, signed builds (run it manually once QA passed instead).
 
 ### Signing
 
-A HAP must be signed before it installs on a real device. Two options:
+The CI artifact is an **unsigned** HAP (`entry-default-unsigned.hap`): hvigor's
+SignHap task depends on DevEco-managed signing cache state that cannot be
+reproduced headlessly, so CI only packages and signs must happen afterwards.
+A HAP must be signed before it installs on a real device:
 
-1. **CI signing (recommended once stable)** — create an AGC debug certificate
-   in DevEco Studio (*File > Project Structure > Signing Configs > Sign in*),
-   then add these repository secrets:
-   - `OHOS_SIGN_P12_BASE64` — key store (.p12), base64
-   - `OHOS_SIGN_CERT_BASE64` — certificate (.cer), base64
-   - `OHOS_SIGN_P7B_BASE64` — provisioning profile (.p7b), base64
-   - `OHOS_SIGN_KEY_ALIAS`, `OHOS_SIGN_KEY_PASSWORD`, `OHOS_SIGN_STORE_PASSWORD`
-
-   The workflow then produces an `entry-default-signed.hap` you can install
-   directly with `hdc install`.
-2. **Local signing** — download the unsigned artifact, open it in DevEco
-   Studio (*Build > Build App(s)/HAP(s)* with automatic signing enabled), or
-   sign it with `hap-sign-tool` from the Command Line Tools.
+1. **Local signing** — open the project in DevEco Studio with automatic
+   signing enabled (*File > Project Structure > Signing Configs*), or sign
+   the unsigned HAP with `hap-sign-tool` from the Command Line Tools.
+2. **AGC material via secrets (future CI signing)** — create an AGC debug
+   certificate in DevEco Studio and add repository secrets
+   (`OHOS_SIGN_P12_BASE64`, `OHOS_SIGN_CERT_BASE64`, `OHOS_SIGN_P7B_BASE64`,
+   `OHOS_SIGN_KEY_ALIAS`, `OHOS_SIGN_KEY_PASSWORD`, `OHOS_SIGN_STORE_PASSWORD`);
+   see issue "sign HAPs in CI with AGC debug certificate".
 
 Install on a connected device:
 

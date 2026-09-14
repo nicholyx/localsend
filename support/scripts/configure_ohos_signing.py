@@ -1,88 +1,64 @@
 #!/usr/bin/env python3
-"""Configures HAP signing for the HarmonyOS build in CI.
+"""Prepares the HarmonyOS build for an UNSIGNED HAP.
 
-Materializes the signing material (key store, certificate, provisioning
-profile) passed by the build_ohos_hap.yml workflow and injects a
-"signingConfigs" entry into app/ohos/build-profile.json5.
+hvigor's SignHap task requires DevEco-managed signing cache state that cannot
+be reproduced headlessly, and the flutter-ohos tool refuses to build a debug
+HAP while `signingConfigs` is empty. To produce an unsigned HAP in CI we
+therefore:
 
-The material comes from an AGC (AppGallery Connect) debug certificate,
-created once in DevEco Studio (File > Project Structure > Signing Configs).
-See docs/HARMONYOS.md for the step-by-step guide.
+1. fill `signingConfigs` with a placeholder entry (satisfies the non-empty
+   check without real material), and
+2. detach the placeholder from the product by removing the product's
+   `signingConfig` reference, so hvigor packages the HAP unsigned.
+
+The unsigned HAP (entry-default-unsigned.hap) is uploaded as a workflow
+artifact and must be signed before installing on a device - either locally
+in DevEco Studio, with hap-sign-tool, or by configuring the OHOS_SIGNING_*
+repository secrets for the AGC-based flow (see docs/HARMONYOS.md).
 """
 
-import argparse
 import json
 import pathlib
-import shutil
 import sys
 
 BUILD_PROFILE = pathlib.Path(__file__).resolve().parents[2] / "app" / "ohos" / "build-profile.json5"
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--p12", required=True, type=pathlib.Path, help="key store file (.p12)")
-    parser.add_argument("--cert", required=True, type=pathlib.Path, help="certificate file (.cer)")
-    parser.add_argument("--profile", required=True, type=pathlib.Path, help="provisioning profile (.p7b)")
-    parser.add_argument("--key-alias", required=True)
-    parser.add_argument("--key-password", required=True)
-    parser.add_argument("--store-password", required=True)
-    args = parser.parse_args()
-
-    signing_dir = BUILD_PROFILE.parent / "signing"
-    signing_dir.mkdir(parents=True, exist_ok=True)
-    # hvigor (API 26) requires <material-dir>/material to be a non-empty
-    # directory (its material convention), so mirror the material files there.
-    material_dir = signing_dir / "material"
-    material_dir.mkdir(parents=True, exist_ok=True)
-    store = signing_dir / "signing.p12"
-    cert = signing_dir / "signing.cer"
-    profile = signing_dir / "signing.p7b"
-    shutil.copyfile(args.p12, store)
-    shutil.copyfile(args.cert, cert)
-    shutil.copyfile(args.profile, profile)
-    # Mirror into the material/ subdirectory that hvigor validates.
-    shutil.copyfile(args.p12, material_dir / "signing.p12")
-    shutil.copyfile(args.cert, material_dir / "signing.cer")
-    shutil.copyfile(args.profile, material_dir / "signing.p7b")
-
-    # The file is JSON5 with comments, so parse only the parts that matter:
-    # assert the expected empty structure before patching, then splice the
-    # signing config in textually.
     text = BUILD_PROFILE.read_text(encoding="utf-8")
+
+    # 1) Replace the empty signingConfigs with a placeholder entry.
     empty_configs = '"signingConfigs": []'
     if empty_configs not in text:
         print(f"ERROR: expected {empty_configs!r} in {BUILD_PROFILE}", file=sys.stderr)
         return 1
-
-    signing_config = json.dumps(
+    placeholder = json.dumps(
         {
-            "name": "ci",
+            "name": "unsigned-placeholder",
             "type": "HarmonyOS",
             "material": {
-                "certpath": str(cert),
-                "keyAlias": args.key_alias,
-                "keyPassword": args.key_password,
-                "profile": str(profile),
+                "certpath": "",
+                "keyAlias": "",
+                "keyPassword": "",
+                "profile": "",
                 "signAlg": "SHA256withECDSA",
-                "storeFile": str(store),
-                "storePassword": args.store_password,
+                "storeFile": "",
+                "storePassword": "",
             },
         },
         indent=2,
     )
-    # json.dumps emits double quotes, which is what json5 expects.
-    text = text.replace(empty_configs, f'"signingConfigs": [{signing_config}]', 1)
+    text = text.replace(empty_configs, f'"signingConfigs": [{placeholder}]', 1)
 
+    # 2) Detach the placeholder from the product so hvigor skips SignHap.
     product_default = '"name": "default",\n        "signingConfig": "default",'
     if product_default not in text:
         print(f"ERROR: expected default product signingConfig in {BUILD_PROFILE}", file=sys.stderr)
         return 1
-    text = text.replace(product_default, '"name": "default",\n        "signingConfig": "ci",', 1)
+    text = text.replace(product_default, '"name": "default",', 1)
 
     BUILD_PROFILE.write_text(text, encoding="utf-8")
-
-    print("Signing configuration written to", BUILD_PROFILE)
+    print("Unsigned build configured (placeholder signing config detached from product).")
     return 0
 
 

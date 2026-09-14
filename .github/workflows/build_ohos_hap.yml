@@ -145,8 +145,6 @@ jobs:
             echo "OHOS_FLUTTER_ROOT=$OHOS_FLUTTER_HOME"
           } >> "$GITHUB_ENV"
           ls "$CLT_DIR/bin" 2>/dev/null || true
-          echo "--- SDK layout (debug) ---"
-          find "$CLT_DIR/sdk" -maxdepth 3 -type d 2>/dev/null | head -40 || true
 
       - name: Flutter doctor
         run: |
@@ -158,69 +156,12 @@ jobs:
         working-directory: app
         run: flutter pub get
 
-      - name: Configure signing
-        env:
-          OHOS_SIGN_P12_BASE64: ${{ secrets.OHOS_SIGN_P12_BASE64 }}
-          OHOS_SIGN_CERT_BASE64: ${{ secrets.OHOS_SIGN_CERT_BASE64 }}
-          OHOS_SIGN_P7B_BASE64: ${{ secrets.OHOS_SIGN_P7B_BASE64 }}
-          OHOS_SIGN_KEY_ALIAS: ${{ secrets.OHOS_SIGN_KEY_ALIAS }}
-          OHOS_SIGN_KEY_PASSWORD: ${{ secrets.OHOS_SIGN_KEY_PASSWORD }}
-          OHOS_SIGN_STORE_PASSWORD: ${{ secrets.OHOS_SIGN_STORE_PASSWORD }}
-        run: |
-          set -euo pipefail
-          if [ -n "$OHOS_SIGN_P12_BASE64" ]; then
-            echo "Using AGC signing material from secrets."
-            python3 support/scripts/configure_ohos_signing.py \
-              --p12 <(echo "$OHOS_SIGN_P12_BASE64" | base64 -d) \
-              --cert <(echo "$OHOS_SIGN_CERT_BASE64" | base64 -d) \
-              --profile <(echo "$OHOS_SIGN_P7B_BASE64" | base64 -d) \
-              --key-alias "$OHOS_SIGN_KEY_ALIAS" \
-              --key-password "$OHOS_SIGN_KEY_PASSWORD" \
-              --store-password "$OHOS_SIGN_STORE_PASSWORD"
-            exit 0
-          fi
-          echo "No AGC signing material configured - generating a LOCAL self-signed debug set."
-          # Debug HAPs require a signing config, so without AGC material we
-          # self-sign with the hap-sign-tool from the Command Line Tools.
-          SIGN_TOOL=$(find "$HOS_SDK_HOME" -name "hap-sign-tool.jar" | head -1)
-          if [ -z "$SIGN_TOOL" ]; then
-            echo "::error::hap-sign-tool.jar not found under $HOS_SDK_HOME" >&2
-            exit 1
-          fi
-          chmod +x support/scripts/generate_ohos_debug_signing.sh
-          support/scripts/generate_ohos_debug_signing.sh \
-            --sign-tool "$SIGN_TOOL" \
-            --bundle-name "org.localsend.localsend_app" \
-            --out-dir /tmp/ohos-signing
-          python3 support/scripts/configure_ohos_signing.py \
-            --p12 /tmp/ohos-signing/signing.p12 \
-            --cert /tmp/ohos-signing/signing.cer \
-            --profile /tmp/ohos-signing/signing.p7b \
-            --key-alias "app" \
-            --key-password "localsend-debug-signing-0123456789abcdef" \
-            --store-password "localsend-debug-signing-0123456789abcdef"
-
-      - name: "Debug: cargo check for the ohos target"
-        working-directory: packages/localsend_isolates/rust
-        env:
-          CC_aarch64_unknown_linux_ohos: ${{ env.COMMANDLINE_TOOL_DIR }}/sdk/default/openharmony/native/llvm/bin/clang
-          CFLAGS_aarch64_unknown_linux_ohos: --sysroot=${{ env.COMMANDLINE_TOOL_DIR }}/sdk/default/openharmony/native/sysroot --target=aarch64-unknown-linux-ohos
-        run: |
-          set +e
-          cargo check --target aarch64-unknown-linux-ohos 2>&1
-          echo "check exit: $?"
+      - name: Configure unsigned build
+        run: python3 support/scripts/configure_ohos_signing.py
 
       - name: Build HAP
         working-directory: app
         run: flutter build hap --target-platform ohos-arm64 --"${BUILD_MODE:-debug}"
-
-      - name: "Debug: dump hvigor logs on failure"
-        if: failure()
-        working-directory: app
-        run: |
-          set +e
-          find ohos/.hvigor -type f 2>/dev/null | head -20
-          tail -200 ohos/.hvigor/outputs/build-logs/*.log 2>/dev/null
 
       - name: Upload HAP artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
