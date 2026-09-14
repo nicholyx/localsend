@@ -29,10 +29,11 @@ def main() -> int:
     parser.add_argument("--store-password", required=True)
     args = parser.parse_args()
 
-    # hvigor (API 26) expects the signing material to live inside a
-    # directory literally named "material" under the OHOS project.
-    signing_dir = BUILD_PROFILE.parent / "signing" / "material"
+    signing_dir = BUILD_PROFILE.parent / "signing"
     signing_dir.mkdir(parents=True, exist_ok=True)
+    # hvigor (API 26) stats <material-dir>/material and requires it to be a
+    # directory (its incremental-state convention), so provide it.
+    (signing_dir / "material").mkdir(parents=True, exist_ok=True)
     store = signing_dir / "signing.p12"
     cert = signing_dir / "signing.cer"
     profile = signing_dir / "signing.p7b"
