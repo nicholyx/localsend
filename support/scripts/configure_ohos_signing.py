@@ -31,15 +31,20 @@ def main() -> int:
 
     signing_dir = BUILD_PROFILE.parent / "signing"
     signing_dir.mkdir(parents=True, exist_ok=True)
-    # hvigor (API 26) stats <material-dir>/material and requires it to be a
-    # directory (its incremental-state convention), so provide it.
-    (signing_dir / "material").mkdir(parents=True, exist_ok=True)
+    # hvigor (API 26) requires <material-dir>/material to be a non-empty
+    # directory (its material convention), so mirror the material files there.
+    material_dir = signing_dir / "material"
+    material_dir.mkdir(parents=True, exist_ok=True)
     store = signing_dir / "signing.p12"
     cert = signing_dir / "signing.cer"
     profile = signing_dir / "signing.p7b"
     shutil.copyfile(args.p12, store)
     shutil.copyfile(args.cert, cert)
     shutil.copyfile(args.profile, profile)
+    # Mirror into the material/ subdirectory that hvigor validates.
+    shutil.copyfile(args.p12, material_dir / "signing.p12")
+    shutil.copyfile(args.cert, material_dir / "signing.cer")
+    shutil.copyfile(args.profile, material_dir / "signing.p7b")
 
     # The file is JSON5 with comments, so parse only the parts that matter:
     # assert the expected empty structure before patching, then splice the
