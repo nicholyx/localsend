@@ -1,20 +1,119 @@
 use crate::frb_generated::StreamSink;
+#[cfg(not(target_env = "ohos"))]
 use bytes::Bytes;
 use flutter_rust_bridge::{DartFnFuture, frb};
+#[cfg(not(target_env = "ohos"))]
 use localsend::crypto::token::SigningTokenKey;
 use localsend::model::discovery::DeviceType;
 use localsend::model::transfer::FileDto;
+#[cfg(not(target_env = "ohos"))]
 pub use localsend::webrtc::signaling::{
     ClientInfo, ClientInfoWithoutId, ManagedSignalingConnection, SignalingConnection,
     WsServerMessage, WsServerSdpMessage,
 };
+#[cfg(not(target_env = "ohos"))]
 pub use localsend::webrtc::webrtc::{
     PinConfig, RTCFile, RTCFileError, RTCSendFileResponse, RTCStatus,
 };
 use std::collections::HashSet;
+#[cfg(not(target_env = "ohos"))]
 use std::sync::Arc;
+#[cfg(not(target_env = "ohos"))]
 use tokio::sync::{Mutex, mpsc, oneshot};
 use uuid::Uuid;
+
+// On OHOS the `webrtc` feature of the core crate is disabled (it does not compile for
+// aarch64-unknown-linux-ohos yet). The types below are redefined with the exact same
+// shape as the upstream ones so that the flutter_rust_bridge generated code
+// (frb_generated.rs) compiles unchanged. All functions return errors at runtime,
+// which is fine because the Dart side keeps WebRTC disabled (`webRTCEnabled = false`).
+
+#[cfg(target_env = "ohos")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ClientInfo {
+    pub id: Uuid,
+    pub alias: String,
+    pub version: String,
+    pub device_model: Option<String>,
+    pub device_type: Option<DeviceType>,
+    pub token: String,
+}
+
+#[cfg(target_env = "ohos")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ClientInfoWithoutId {
+    pub alias: String,
+    pub version: String,
+    pub device_model: Option<String>,
+    pub device_type: Option<DeviceType>,
+    pub token: String,
+}
+
+#[cfg(target_env = "ohos")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum WsServerMessage {
+    Hello {
+        client: ClientInfo,
+        peers: Vec<ClientInfo>,
+    },
+    Join {
+        peer: ClientInfo,
+    },
+    Update {
+        peer: ClientInfo,
+    },
+    Left {
+        peer_id: Uuid,
+    },
+    Offer(WsServerSdpMessage),
+    Answer(WsServerSdpMessage),
+    Error {
+        code: u16,
+    },
+}
+
+#[cfg(target_env = "ohos")]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct WsServerSdpMessage {
+    pub peer: ClientInfo,
+    pub session_id: String,
+    pub sdp: String,
+}
+
+#[cfg(target_env = "ohos")]
+#[derive(Debug, Eq, PartialEq)]
+pub struct PinConfig {
+    pub pin: String,
+    pub max_tries: u8,
+}
+
+#[cfg(target_env = "ohos")]
+#[derive(Debug, Eq, PartialEq)]
+pub enum RTCStatus {
+    SdpExchanged,
+    Connected,
+    PinRequired,
+    TooManyAttempts,
+    Declined,
+    Sending,
+    Finished,
+    Error(String),
+}
+
+#[cfg(target_env = "ohos")]
+#[derive(Debug, Eq, PartialEq)]
+pub struct RTCFileError {
+    pub file_id: String,
+    pub error: String,
+}
+
+#[cfg(target_env = "ohos")]
+#[derive(Debug, Eq, PartialEq)]
+pub struct RTCSendFileResponse {
+    pub id: String,
+    pub success: bool,
+    pub error: Option<String>,
+}
 
 pub struct ProposingClientInfo {
     pub alias: String,
@@ -23,6 +122,7 @@ pub struct ProposingClientInfo {
     pub device_type: Option<DeviceType>,
 }
 
+#[cfg(not(target_env = "ohos"))]
 impl ProposingClientInfo {
     fn sign(&self, signing_key: &SigningTokenKey) -> anyhow::Result<ClientInfoWithoutId> {
         Ok(ClientInfoWithoutId {
@@ -35,6 +135,19 @@ impl ProposingClientInfo {
     }
 }
 
+#[cfg(target_env = "ohos")]
+pub async fn connect(
+    sink: StreamSink<WsServerMessage>,
+    uri: String,
+    info: ProposingClientInfo,
+    private_key: String,
+    on_connection: impl Fn(LsSignalingConnection) -> DartFnFuture<()>,
+) {
+    let _ = (uri, info, private_key, on_connection);
+    let _ = sink.add_error(anyhow::anyhow!("WebRTC signaling is not supported on OHOS yet"));
+}
+
+#[cfg(not(target_env = "ohos"))]
 pub async fn connect(
     sink: StreamSink<WsServerMessage>,
     uri: String,
@@ -71,10 +184,48 @@ pub async fn connect(
     }
 }
 
+#[cfg(target_env = "ohos")]
+pub struct LsSignalingConnection;
+
+#[cfg(not(target_env = "ohos"))]
 pub struct LsSignalingConnection {
     inner: Arc<ManagedSignalingConnection>,
 }
 
+#[cfg(target_env = "ohos")]
+impl LsSignalingConnection {
+    pub async fn update_info(&self, info: ClientInfoWithoutId) -> anyhow::Result<()> {
+        let _ = info;
+        Err(anyhow::anyhow!("WebRTC is not supported on OHOS yet"))
+    }
+
+    pub async fn send_offer(
+        &self,
+        stun_servers: Vec<String>,
+        target: Uuid,
+        private_key: &str,
+        expecting_public_key: Option<ExpectingPublicKey>,
+        pin: Option<PinConfig>,
+        files: Vec<FileDto>,
+    ) -> anyhow::Result<RTCSendController> {
+        let _ = (stun_servers, target, private_key, expecting_public_key, pin, files);
+        Err(anyhow::anyhow!("WebRTC is not supported on OHOS yet"))
+    }
+
+    pub async fn accept_offer(
+        &self,
+        stun_servers: Vec<String>,
+        offer: WsServerSdpMessage,
+        private_key: &str,
+        expecting_public_key: Option<ExpectingPublicKey>,
+        pin: Option<PinConfig>,
+    ) -> anyhow::Result<RTCReceiveController> {
+        let _ = (stun_servers, offer, private_key, expecting_public_key, pin);
+        Err(anyhow::anyhow!("WebRTC is not supported on OHOS yet"))
+    }
+}
+
+#[cfg(not(target_env = "ohos"))]
 impl LsSignalingConnection {
     pub async fn update_info(&self, info: ClientInfoWithoutId) -> anyhow::Result<()> {
         self.inner.send_update(info).await?;
@@ -240,6 +391,10 @@ pub struct ExpectingPublicKey {
     pub kind: String,
 }
 
+#[cfg(target_env = "ohos")]
+pub struct RTCSendController;
+
+#[cfg(not(target_env = "ohos"))]
 pub struct RTCSendController {
     status_rx: mpsc::Receiver<RTCStatus>,
     selected_rx: Arc<Mutex<Option<oneshot::Receiver<HashSet<String>>>>>,
@@ -248,6 +403,32 @@ pub struct RTCSendController {
     send_tx: mpsc::Sender<RTCFile>,
 }
 
+#[cfg(target_env = "ohos")]
+impl RTCSendController {
+    pub async fn listen_status(&mut self, sink: StreamSink<RTCStatus>) {
+        let _ = sink.add_error(anyhow::anyhow!("WebRTC is not supported on OHOS yet"));
+    }
+
+    pub async fn listen_selected_files(&self) -> anyhow::Result<HashSet<String>> {
+        Err(anyhow::anyhow!("WebRTC is not supported on OHOS yet"))
+    }
+
+    pub async fn listen_error(&mut self, sink: StreamSink<RTCFileError>) {
+        let _ = sink.add_error(anyhow::anyhow!("WebRTC is not supported on OHOS yet"));
+    }
+
+    pub async fn send_pin(&self, pin: String) -> anyhow::Result<()> {
+        let _ = pin;
+        Err(anyhow::anyhow!("WebRTC is not supported on OHOS yet"))
+    }
+
+    pub async fn send_file(&self, file_id: String) -> anyhow::Result<RTCFileSender> {
+        let _ = file_id;
+        Err(anyhow::anyhow!("WebRTC is not supported on OHOS yet"))
+    }
+}
+
+#[cfg(not(target_env = "ohos"))]
 impl RTCSendController {
     pub async fn listen_status(&mut self, sink: StreamSink<RTCStatus>) {
         while let Some(status) = self.status_rx.recv().await {
@@ -298,10 +479,23 @@ impl RTCSendController {
     }
 }
 
+#[cfg(target_env = "ohos")]
+pub struct RTCFileSender;
+
+#[cfg(not(target_env = "ohos"))]
 pub struct RTCFileSender {
     binary_tx: mpsc::Sender<Bytes>,
 }
 
+#[cfg(target_env = "ohos")]
+impl RTCFileSender {
+    pub async fn send(&self, data: Vec<u8>) -> anyhow::Result<()> {
+        let _ = data;
+        Err(anyhow::anyhow!("WebRTC is not supported on OHOS yet"))
+    }
+}
+
+#[cfg(not(target_env = "ohos"))]
 impl RTCFileSender {
     pub async fn send(&self, data: Vec<u8>) -> anyhow::Result<()> {
         self.binary_tx.send(Bytes::from(data)).await?;
@@ -309,6 +503,10 @@ impl RTCFileSender {
     }
 }
 
+#[cfg(target_env = "ohos")]
+pub struct RTCReceiveController;
+
+#[cfg(not(target_env = "ohos"))]
 pub struct RTCReceiveController {
     status_rx: Arc<Mutex<Option<mpsc::Receiver<RTCStatus>>>>,
     files_rx: Arc<Mutex<Option<oneshot::Receiver<Vec<FileDto>>>>>,
@@ -319,6 +517,45 @@ pub struct RTCReceiveController {
     file_status_tx: mpsc::Sender<RTCSendFileResponse>,
 }
 
+#[cfg(target_env = "ohos")]
+impl RTCReceiveController {
+    pub async fn listen_status(&self, sink: StreamSink<RTCStatus>) {
+        let _ = sink.add_error(anyhow::anyhow!("WebRTC is not supported on OHOS yet"));
+    }
+
+    pub async fn listen_files(&self) -> anyhow::Result<Vec<FileDto>> {
+        Err(anyhow::anyhow!("WebRTC is not supported on OHOS yet"))
+    }
+
+    pub async fn send_pin(&self, pin: String) -> anyhow::Result<()> {
+        let _ = pin;
+        Err(anyhow::anyhow!("WebRTC is not supported on OHOS yet"))
+    }
+
+    pub async fn send_selection(&self, selection: HashSet<String>) -> anyhow::Result<()> {
+        let _ = selection;
+        Err(anyhow::anyhow!("WebRTC is not supported on OHOS yet"))
+    }
+
+    pub async fn decline(&self) -> anyhow::Result<()> {
+        Err(anyhow::anyhow!("WebRTC is not supported on OHOS yet"))
+    }
+
+    pub async fn listen_error(&self, sink: StreamSink<RTCFileError>) {
+        let _ = sink.add_error(anyhow::anyhow!("WebRTC is not supported on OHOS yet"));
+    }
+
+    pub async fn listen_receiving(&self, sink: StreamSink<RTCFileReceiver>) {
+        let _ = sink.add_error(anyhow::anyhow!("WebRTC is not supported on OHOS yet"));
+    }
+
+    pub async fn send_file_status(&self, status: RTCSendFileResponse) -> anyhow::Result<()> {
+        let _ = status;
+        Err(anyhow::anyhow!("WebRTC is not supported on OHOS yet"))
+    }
+}
+
+#[cfg(not(target_env = "ohos"))]
 impl RTCReceiveController {
     pub async fn listen_status(&self, sink: StreamSink<RTCStatus>) {
         let Some(mut status_rx) = self.status_rx.lock().await.take() else {
@@ -407,11 +644,30 @@ impl RTCReceiveController {
     }
 }
 
+#[cfg(target_env = "ohos")]
+pub struct RTCFileReceiver {
+    file_id: String,
+}
+
+#[cfg(not(target_env = "ohos"))]
 pub struct RTCFileReceiver {
     file_id: String,
     binary_rx: Arc<Mutex<Option<mpsc::Receiver<Bytes>>>>,
 }
 
+#[cfg(target_env = "ohos")]
+impl RTCFileReceiver {
+    pub fn get_file_id(&self) -> String {
+        self.file_id.to_owned()
+    }
+
+    pub async fn receive(&self, sink: StreamSink<Vec<u8>>) -> anyhow::Result<()> {
+        let _ = sink;
+        Err(anyhow::anyhow!("WebRTC is not supported on OHOS yet"))
+    }
+}
+
+#[cfg(not(target_env = "ohos"))]
 impl RTCFileReceiver {
     pub fn get_file_id(&self) -> String {
         self.file_id.to_owned()
