@@ -35,8 +35,8 @@ env:
   # mirror because Huawei's official download requires an authenticated
   # session. For production use, host your own mirror and update the
   # download step below.
-  OHOS_TOOLS_VERSION: 6.1.0.830
-  OHOS_TOOLS_BASENAME: commandline-tools-linux-x64-6.1.0.830
+  OHOS_TOOLS_VERSION: 26.0.0.821
+  OHOS_TOOLS_BASENAME: commandline-tools-linux-x64-26.0.0.821
   OHOS_TOOLS_HOME: ${{ github.workspace }}/ohos-tools
   OHOS_FLUTTER_HOME: ${{ github.workspace }}/flutter-ohos
 
@@ -71,7 +71,7 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ env.OHOS_TOOLS_HOME }}
-          key: ohos-commandline-tools-${{ env.OHOS_TOOLS_VERSION }}-v2
+          key: ohos-commandline-tools-${{ env.OHOS_TOOLS_VERSION }}-v3
 
       - name: Download Command Line Tools
         if: steps.cache_tools.outputs.cache-hit != 'true'
@@ -81,7 +81,7 @@ jobs:
           # One single codeload request instead of 20 raw.githubusercontent
           # requests: raw throttles anonymous traffic from Actions runners.
           curl -fL --retry 5 --retry-delay 10 --max-time 1800 \
-            "https://codeload.github.com/xiaobingtech/commandline-tools-linux-x64-6.1.0.830/tar.gz/refs/heads/main" \
+            "https://codeload.github.com/xiaobingtech/commandline-tools-linux-x64-26.0.0.821/tar.gz/refs/heads/main" \
             -o /tmp/ohos-tools.tar.gz
           tar -xzf /tmp/ohos-tools.tar.gz -C /tmp/ohos-tools-split
           cd /tmp/ohos-tools-split/*/
@@ -145,6 +145,8 @@ jobs:
             echo "OHOS_FLUTTER_ROOT=$OHOS_FLUTTER_HOME"
           } >> "$GITHUB_ENV"
           ls "$CLT_DIR/bin" 2>/dev/null || true
+          echo "--- SDK layout (debug) ---"
+          find "$CLT_DIR/sdk" -maxdepth 3 -type d 2>/dev/null | head -40 || true
 
       - name: Flutter doctor
         run: |
