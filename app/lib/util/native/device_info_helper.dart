@@ -29,6 +29,12 @@ Future<DeviceInfoResult> getDeviceInfo() async {
       case TargetPlatform.fuchsia:
         deviceType = DeviceType.desktop;
         break;
+      // TargetPlatform.ohos only exists in the flutter-ohos fork; a default
+      // case keeps this file compilable against the stock SDK as well.
+      // ignore: unreachable_switch_default
+      default:
+        deviceType = DeviceType.mobile;
+        break;
     }
 
     switch (defaultTargetPlatform) {
@@ -52,6 +58,12 @@ Future<DeviceInfoResult> getDeviceInfo() async {
         break;
       case TargetPlatform.fuchsia:
         deviceModel = 'Fuchsia';
+        break;
+      // HarmonyOS: device_info_plus has no OHOS implementation, so report the
+      // platform name instead of probing a missing plugin.
+      // ignore: unreachable_switch_default
+      default:
+        deviceModel = 'HarmonyOS';
         break;
     }
   }

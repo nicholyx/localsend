@@ -15,6 +15,11 @@ extension TargetPlatformExt on TargetPlatform {
         return 'macOS';
       case TargetPlatform.windows:
         return 'Windows';
+      // TargetPlatform.ohos only exists in the flutter-ohos fork; a default
+      // case keeps this file compilable against the stock SDK as well.
+      // ignore: unreachable_switch_default
+      default:
+        return 'HarmonyOS';
     }
   }
 }
