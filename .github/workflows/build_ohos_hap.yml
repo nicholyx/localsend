@@ -214,6 +214,14 @@ jobs:
         working-directory: app
         run: flutter build hap --target-platform ohos-arm64 --"${BUILD_MODE:-debug}"
 
+      - name: "Debug: dump hvigor logs on failure"
+        if: failure()
+        working-directory: app
+        run: |
+          set +e
+          find ohos/.hvigor -type f 2>/dev/null | head -20
+          tail -200 ohos/.hvigor/outputs/build-logs/*.log 2>/dev/null
+
       - name: Upload HAP artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

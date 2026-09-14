@@ -50,6 +50,7 @@ def main() -> int:
     signing_config = json.dumps(
         {
             "name": "ci",
+            "type": "HarmonyOS",
             "material": {
                 "certpath": str(cert),
                 "keyAlias": args.key_alias,
