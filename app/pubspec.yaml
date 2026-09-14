@@ -99,6 +99,12 @@ dependency_overrides:
     git:
       url: https://github.com/Tienisto/device_apps.git
       ref: 5dc7956d938541254d2e175766b3b84ea38bb85b
+  flex_color_picker:
+    # [OHOS] Vendored copy with default cases added so the exhaustive
+    # TargetPlatform switches also compile against the flutter-ohos fork,
+    # which adds TargetPlatform.ohos to the enum.
+    path: ../third_party/flutter/flex_color_picker
+
   pasteboard:
     # This is temporary workaround, wait upstream for update
     git:

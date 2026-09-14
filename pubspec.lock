@@ -466,12 +466,11 @@ packages:
     source: hosted
     version: "1.1.1"
   flex_color_picker:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: flex_color_picker
-      sha256: a0979dd61f21b634717b98eb4ceaed2bfe009fe020ce8597aaf164b9eeb57aaa
-      url: "https://pub.dev"
-    source: hosted
+      path: "third_party/flutter/flex_color_picker"
+      relative: true
+    source: path
     version: "3.8.0"
   flex_seed_scheme:
     dependency: transitive
