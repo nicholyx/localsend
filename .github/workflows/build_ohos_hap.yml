@@ -101,13 +101,16 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ env.OHOS_FLUTTER_HOME }}
-          key: ohos-flutter-${{ env.OHOS_FLUTTER_BRANCH }}
+          key: ohos-flutter-${{ env.OHOS_FLUTTER_BRANCH }}-v2
 
       - name: Clone flutter-ohos SDK
         if: steps.cache_flutter.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
-          git clone --depth 1 -b "$OHOS_FLUTTER_BRANCH" "$OHOS_FLUTTER_REPO" "$OHOS_FLUTTER_HOME"
+          # Full clone with tags: the version file is derived from git tags,
+          # a shallow clone reports "0.0.0-unknown" and pub resolution fails.
+          git clone -b "$OHOS_FLUTTER_BRANCH" "$OHOS_FLUTTER_REPO" "$OHOS_FLUTTER_HOME"
+          git -C "$OHOS_FLUTTER_HOME" fetch origin --tags --force
           # Prepare the SDK (downloads engine artifacts for the host).
           "$OHOS_FLUTTER_HOME/bin/flutter" --version
 
