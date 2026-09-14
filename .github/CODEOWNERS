@@ -1,0 +1,4 @@
+# Default reviewers for everything.
+# HarmonyOS port specifics (app/ohos, third_party, cargokit) share the owner
+# for now; split per-path once more maintainers join.
+* @nicholyx
