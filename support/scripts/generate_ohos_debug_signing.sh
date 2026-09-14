@@ -102,6 +102,9 @@ profile = {
     "type": "debug",
     "bundle-info": {
         "developer-id": "LocalSend",
+        # hap-sign-tool validates development-certificate for type=debug
+        # and distribution-certificate for type=release.
+        "development-certificate": entity_cert,
         "distribution-certificate": entity_cert,
         "bundle-name": bundle_name,
         "apl": "normal",
