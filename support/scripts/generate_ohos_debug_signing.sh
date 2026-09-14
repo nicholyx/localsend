@@ -19,8 +19,8 @@ set -euo pipefail
 SIGN_TOOL=""
 BUNDLE_NAME=""
 OUT_DIR=""
-KEY_PWD="localsend123"
-STORE_PWD="localsend123"
+KEY_PWD="localsend-debug-signing-0123456789abcdef"
+STORE_PWD="localsend-debug-signing-0123456789abcdef"
 
 while [ $# -gt 0 ]; do
   case "$1" in

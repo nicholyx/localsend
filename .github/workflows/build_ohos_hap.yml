@@ -197,8 +197,8 @@ jobs:
             --cert /tmp/ohos-signing/signing.cer \
             --profile /tmp/ohos-signing/signing.p7b \
             --key-alias "app" \
-            --key-password "localsend123" \
-            --store-password "localsend123"
+            --key-password "localsend-debug-signing-0123456789abcdef" \
+            --store-password "localsend-debug-signing-0123456789abcdef"
 
       - name: "Debug: cargo check for the ohos target"
         working-directory: packages/localsend_isolates/rust
