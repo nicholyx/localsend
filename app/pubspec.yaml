@@ -21,6 +21,8 @@ dependencies:
   dynamic_color: 1.8.1
   file_picker: 11.0.3
   file_selector: 1.1.0
+  file_selector_ohos: # [OHOS] HarmonyOS implementation of file_selector (only active when building with flutter-ohos)
+    path: ../third_party/flutter/file_selector_ohos
   flex_color_picker: 3.8.0
   flutter:
     sdk: flutter
@@ -49,7 +51,11 @@ dependencies:
   path: 1.9.1
   path_provider: 2.1.6
   path_provider_foundation: 2.6.0
+  path_provider_ohos: # [OHOS] HarmonyOS implementation of path_provider (only active when building with flutter-ohos)
+    path: ../third_party/flutter/path_provider_ohos
   permission_handler: 12.0.3
+  permission_handler_ohos: # [OHOS] HarmonyOS implementation of permission_handler (only active when building with flutter-ohos)
+    path: ../third_party/flutter/permission_handler_ohos
   pretty_qr_code: 3.6.0
   refena_flutter: 3.5.0
   refena_inspector_client: 2.1.1
@@ -57,6 +63,8 @@ dependencies:
   screen_retriever: 0.2.2
   share_handler: 0.0.22
   shared_preferences: 2.5.5
+  shared_preferences_ohos: # [OHOS] HarmonyOS implementation of shared_preferences (only active when building with flutter-ohos)
+    path: ../third_party/flutter/shared_preferences_ohos
   shared_preferences_platform_interface: any
   slang: 4.19.0
   slang_flutter: 4.19.0
@@ -64,6 +72,8 @@ dependencies:
   tray_manager: 0.5.3
   uri_content: 3.1.1
   url_launcher: 6.3.2
+  url_launcher_ohos: # [OHOS] HarmonyOS implementation of url_launcher (only active when building with flutter-ohos)
+    path: ../third_party/flutter/url_launcher_ohos
   uuid: 4.6.0
   wakelock_plus: 1.5.2
   wechat_assets_picker: 10.1.3
