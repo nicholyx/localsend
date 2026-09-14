@@ -119,23 +119,32 @@ jobs:
           set -euo pipefail
           # The extracted layout differs between Command Line Tools versions;
           # discover the tool directories instead of hard-coding them.
+          #
+          # flutter-ohos SDK detection (packages/flutter_tools/lib/src/ohos/
+          # ohos_sdk.dart) requires HOS_SDK_HOME to be the directory whose
+          # children are platform dirs containing `toolchains` (e.g.
+          # <clt>/sdk/default/openharmony/toolchains), while hvigor expects
+          # DEVECO_SDK_HOME at <clt>/sdk. ohpm/hvigorw live in <clt>/bin.
           CLT_DIR=$(find "$OHOS_TOOLS_HOME" -maxdepth 1 -mindepth 1 -type d | head -1)
           echo "Command Line Tools dir: $CLT_DIR"
-          SDK_DIR=$(find "$CLT_DIR" -maxdepth 3 -type d -name sdk | head -1)
-          OHPM_BIN=$(find "$CLT_DIR" -maxdepth 4 -type d -name bin -path "*ohpm*" | head -1)
-          HVIGOR_BIN=$(find "$CLT_DIR" -maxdepth 4 -type d -name bin -path "*hvigor*" | head -1)
-          NODE_BIN=$(find "$CLT_DIR" -maxdepth 4 -type d -name bin -path "*node*" | head -1)
-          echo "sdk=$SDK_DIR ohpm=$OHPM_BIN hvigor=$HVIGOR_BIN node=$NODE_BIN"
+          TOOLCHAINS=$(find "$CLT_DIR" -maxdepth 4 -type d -name toolchains | head -1)
+          if [ -z "$TOOLCHAINS" ]; then
+            echo "::error::No toolchains directory found under $CLT_DIR" >&2
+            exit 1
+          fi
+          SDK_ROOT=$(dirname "$(dirname "$TOOLCHAINS")")
+          echo "sdk root: $SDK_ROOT"
           {
-            echo "DEVECO_SDK_HOME=$SDK_DIR"
-            echo "HOS_SDK_HOME=$SDK_DIR"
-            echo "COMMANDLINE_TOOL_DIR=$CLT_DIR"
             echo "$OHOS_FLUTTER_HOME/bin"
-            [ -n "$OHPM_BIN" ] && echo "$OHPM_BIN"
-            [ -n "$HVIGOR_BIN" ] && echo "$HVIGOR_BIN"
-            [ -n "$NODE_BIN" ] && echo "$NODE_BIN"
+            echo "$CLT_DIR/bin"
           } >> "$GITHUB_PATH"
-          echo "OHOS_FLUTTER_ROOT=$OHOS_FLUTTER_HOME" >> "$GITHUB_ENV"
+          {
+            echo "DEVECO_SDK_HOME=$CLT_DIR/sdk"
+            echo "HOS_SDK_HOME=$SDK_ROOT"
+            echo "COMMANDLINE_TOOL_DIR=$CLT_DIR"
+            echo "OHOS_FLUTTER_ROOT=$OHOS_FLUTTER_HOME"
+          } >> "$GITHUB_ENV"
+          ls "$CLT_DIR/bin" 2>/dev/null || true
 
       - name: Flutter doctor
         run: |
