@@ -159,9 +159,23 @@ jobs:
       - name: Configure unsigned build
         run: python3 support/scripts/configure_ohos_signing.py
 
+      # The flutter-ohos tool exits non-zero after a successful unsigned build
+      # because it expects an *signed* hap file name; continue and verify below.
       - name: Build HAP
+        continue-on-error: true
         working-directory: app
         run: flutter build hap --target-platform ohos-arm64 --"${BUILD_MODE:-debug}"
+
+      - name: Verify unsigned HAP
+        working-directory: app/ohos/entry/build/default/outputs/default
+        run: |
+          set -euo pipefail
+          ls -la
+          if [ ! -f entry-default-unsigned.hap ]; then
+            echo "::error::No unsigned HAP was produced - the build failed before packaging" >&2
+            exit 1
+          fi
+          mv entry-default-unsigned.hap "localsend-${BUILD_MODE:-debug}-ohos-arm64-unsigned.hap"
 
       - name: Upload HAP artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
