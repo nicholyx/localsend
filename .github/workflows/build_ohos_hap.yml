@@ -180,6 +180,16 @@ jobs:
             --key-password "$OHOS_SIGN_KEY_PASSWORD" \
             --store-password "$OHOS_SIGN_STORE_PASSWORD"
 
+      - name: "Debug: cargo check for the ohos target"
+        working-directory: packages/localsend_isolates/rust
+        env:
+          CC_aarch64_unknown_linux_ohos: ${{ env.COMMANDLINE_TOOL_DIR }}/sdk/default/openharmony/native/llvm/bin/clang
+          CFLAGS_aarch64_unknown_linux_ohos: --sysroot=${{ env.COMMANDLINE_TOOL_DIR }}/sdk/default/openharmony/sysroot --target=aarch64-unknown-linux-ohos
+        run: |
+          set +e
+          cargo check --target aarch64-unknown-linux-ohos 2>&1
+          echo "check exit: $?"
+
       - name: Build HAP
         working-directory: app
         run: flutter build hap --target-platform ohos-arm64 --"${BUILD_MODE:-debug}"
