@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "LocalSend 主模块"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "向附近设备分享文件"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "LocalSend"
+    }
+  ]
+}

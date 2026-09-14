@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "LocalSend entry module"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "Share files to nearby devices"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "LocalSend"
+    }
+  ]
+}

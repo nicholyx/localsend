@@ -1,0 +1,10 @@
+{
+  "app": {
+    "bundleName": "org.localsend.localsend_app",
+    "vendor": "localsend",
+    "versionCode": 64,
+    "versionName": "1.18.2",
+    "icon": "$media:app_icon",
+    "label": "$string:app_name"
+  }
+}
