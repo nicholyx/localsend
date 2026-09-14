@@ -1,0 +1,189 @@
+name: Build HarmonyOS HAP
+
+# Builds the HarmonyOS (OHOS) app package with the flutter-ohos fork
+# (branch oh-3.41.9-dev, matching the Flutter version pinned in .fvmrc)
+# and uploads the HAP as a workflow artifact for manual testing.
+#
+# Deliberately NOT wired to releases: the package produced here is for
+# manual QA. Release packages require reviewed, signed builds.
+#
+# Signing (optional): when the OHOS_SIGNING_* secrets are configured, the
+# HAP is signed during the build (entry-default-signed.hap). Without them
+# an unsigned HAP is produced, which must be signed (e.g. in DevEco Studio)
+# before it can be installed on a real device. See docs/HARMONYOS.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_mode:
+        description: "HAP build mode"
+        type: choice
+        default: debug
+        options:
+          - debug
+          - profile
+          - release
+
+permissions:
+  contents: read
+
+env:
+  # Flutter fork with OHOS support, version-matched to .fvmrc (3.41.9).
+  OHOS_FLUTTER_REPO: https://gitcode.com/openharmony-tpc/flutter_flutter.git
+  OHOS_FLUTTER_BRANCH: oh-3.41.9-dev
+  # Command Line Tools (hvigor, ohpm, node, HarmonyOS SDK) from a community
+  # mirror because Huawei's official download requires an authenticated
+  # session. For production use, host your own mirror and point
+  # OHOS_TOOLS_MIRROR at it.
+  OHOS_TOOLS_VERSION: 6.1.0.830
+  OHOS_TOOLS_BASENAME: commandline-tools-linux-x64-6.1.0.830
+  OHOS_TOOLS_MIRROR: https://raw.githubusercontent.com/xiaobingtech/commandline-tools-linux-x64-6.1.0.830/refs/heads/main
+  OHOS_TOOLS_HOME: ${{ github.workspace }}/ohos-tools
+  OHOS_FLUTTER_HOME: ${{ github.workspace }}/flutter-ohos
+
+jobs:
+  build:
+    name: Build HAP (ohos-arm64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      BUILD_MODE: ${{ inputs.build_mode }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Setup JDK 17
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Rust OHOS target
+        run: rustup target add aarch64-unknown-linux-ohos
+
+      - name: Install 7zip
+        run: sudo apt-get update -q && sudo apt-get install -y -q p7zip-full
+
+      - name: Cache Command Line Tools
+        id: cache_tools
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ env.OHOS_TOOLS_HOME }}
+          key: ohos-commandline-tools-${{ env.OHOS_TOOLS_VERSION }}
+
+      - name: Download Command Line Tools
+        if: steps.cache_tools.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p "$OHOS_TOOLS_HOME" /tmp/ohos-tools-split
+          cd /tmp/ohos-tools-split
+          volumes=0
+          for i in $(seq -w 1 30); do
+            FILE="${OHOS_TOOLS_BASENAME}.7z.${i}"
+            for attempt in 1 2 3; do
+              if curl -fsSL --max-time 300 "$OHOS_TOOLS_MIRROR/$FILE" -o "$FILE"; then
+                volumes=$((volumes + 1))
+                echo "Downloaded $FILE"
+                break
+              fi
+              rm -f "$FILE"
+              if [ "$attempt" = 3 ]; then
+                # First volume missing is fatal; any other missing volume ends the split archive.
+                if [ "$volumes" -eq 0 ]; then
+                  echo "::error::Could not download the first Command Line Tools volume" >&2
+                  exit 1
+                fi
+                break 2
+              fi
+              echo "Retry $attempt for $FILE failed, retrying..."
+              sleep 5
+            done
+          done
+          echo "Downloaded $volumes volumes."
+          cat "${OHOS_TOOLS_BASENAME}.7z."* > "${OHOS_TOOLS_BASENAME}.7z"
+          7z x -y -o"$OHOS_TOOLS_HOME" "${OHOS_TOOLS_BASENAME}.7z" > /dev/null
+          find "$OHOS_TOOLS_HOME" -maxdepth 1 -mindepth 1
+
+      - name: Cache flutter-ohos SDK
+        id: cache_flutter
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ env.OHOS_FLUTTER_HOME }}
+          key: ohos-flutter-${{ env.OHOS_FLUTTER_BRANCH }}
+
+      - name: Clone flutter-ohos SDK
+        if: steps.cache_flutter.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          git clone --depth 1 -b "$OHOS_FLUTTER_BRANCH" "$OHOS_FLUTTER_REPO" "$OHOS_FLUTTER_HOME"
+          # Prepare the SDK (downloads engine artifacts for the host).
+          "$OHOS_FLUTTER_HOME/bin/flutter" --version
+
+      - name: Configure OHOS environment
+        run: |
+          set -euo pipefail
+          # The extracted layout differs between Command Line Tools versions;
+          # discover the tool directories instead of hard-coding them.
+          CLT_DIR=$(find "$OHOS_TOOLS_HOME" -maxdepth 1 -mindepth 1 -type d | head -1)
+          echo "Command Line Tools dir: $CLT_DIR"
+          SDK_DIR=$(find "$CLT_DIR" -maxdepth 3 -type d -name sdk | head -1)
+          OHPM_BIN=$(find "$CLT_DIR" -maxdepth 4 -type d -name bin -path "*ohpm*" | head -1)
+          HVIGOR_BIN=$(find "$CLT_DIR" -maxdepth 4 -type d -name bin -path "*hvigor*" | head -1)
+          NODE_BIN=$(find "$CLT_DIR" -maxdepth 4 -type d -name bin -path "*node*" | head -1)
+          echo "sdk=$SDK_DIR ohpm=$OHPM_BIN hvigor=$HVIGOR_BIN node=$NODE_BIN"
+          {
+            echo "DEVECO_SDK_HOME=$SDK_DIR"
+            echo "COMMANDLINE_TOOL_DIR=$CLT_DIR"
+            echo "$OHOS_FLUTTER_HOME/bin"
+            [ -n "$OHPM_BIN" ] && echo "$OHPM_BIN"
+            [ -n "$HVIGOR_BIN" ] && echo "$HVIGOR_BIN"
+            [ -n "$NODE_BIN" ] && echo "$NODE_BIN"
+          } >> "$GITHUB_PATH"
+          echo "OHOS_FLUTTER_ROOT=$OHOS_FLUTTER_HOME" >> "$GITHUB_ENV"
+
+      - name: Flutter doctor
+        run: |
+          flutter config --enable-ohos
+          flutter doctor -v
+          flutter precache --ohos
+
+      - name: Dependencies (app)
+        working-directory: app
+        run: flutter pub get
+
+      - name: Configure signing
+        env:
+          OHOS_SIGN_P12_BASE64: ${{ secrets.OHOS_SIGN_P12_BASE64 }}
+          OHOS_SIGN_CERT_BASE64: ${{ secrets.OHOS_SIGN_CERT_BASE64 }}
+          OHOS_SIGN_P7B_BASE64: ${{ secrets.OHOS_SIGN_P7B_BASE64 }}
+          OHOS_SIGN_KEY_ALIAS: ${{ secrets.OHOS_SIGN_KEY_ALIAS }}
+          OHOS_SIGN_KEY_PASSWORD: ${{ secrets.OHOS_SIGN_KEY_PASSWORD }}
+          OHOS_SIGN_STORE_PASSWORD: ${{ secrets.OHOS_SIGN_STORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "$OHOS_SIGN_P12_BASE64" ]; then
+            echo "No signing material configured - building an UNSIGNED HAP."
+            exit 0
+          fi
+          python3 support/scripts/configure_ohos_signing.py \
+            --p12 <(echo "$OHOS_SIGN_P12_BASE64" | base64 -d) \
+            --cert <(echo "$OHOS_SIGN_CERT_BASE64" | base64 -d) \
+            --profile <(echo "$OHOS_SIGN_P7B_BASE64" | base64 -d) \
+            --key-alias "$OHOS_SIGN_KEY_ALIAS" \
+            --key-password "$OHOS_SIGN_KEY_PASSWORD" \
+            --store-password "$OHOS_SIGN_STORE_PASSWORD"
+
+      - name: Build HAP
+        working-directory: app
+        run: flutter build hap --target-platform ohos-arm64 --"${BUILD_MODE:-debug}"
+
+      - name: Upload HAP artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: localsend-${{ inputs.build_mode || 'debug' }}-ohos-arm64
+          path: |
+            app/ohos/entry/build/default/outputs/default/*.hap
+          if-no-files-found: error
