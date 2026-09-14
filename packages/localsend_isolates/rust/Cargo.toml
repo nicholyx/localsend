@@ -22,12 +22,13 @@ uuid = { version = "1.24.0", features = ["v4"] }
 # OHOS: the `webrtc` crate (via `nix`) does not build for aarch64-unknown-linux-ohos yet,
 # so the WebRTC feature is excluded there. The Dart side already keeps WebRTC disabled
 # (`webRTCEnabled = false`), and api/webrtc.rs provides stubs with identical signatures
-# so the flutter_rust_bridge generated code compiles unchanged.
+# so the flutter_rust_bridge generated code compiles unchanged. The `discovery`
+# feature (scan/discovery protocol) is required by api/discovery.rs.
 [target.'cfg(not(target_env = "ohos"))'.dependencies]
 localsend = { path = "../../core", features = ["full"] }
 
 [target.'cfg(target_env = "ohos")'.dependencies]
-localsend = { path = "../../core", features = ["crypto", "http", "multicast"] }
+localsend = { path = "../../core", features = ["crypto", "discovery", "http", "multicast"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 tracing-android = "0.2"
