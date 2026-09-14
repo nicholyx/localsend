@@ -43,14 +43,14 @@ JAVA="${JAVA_HOME:+$JAVA_HOME/bin/}java"
 
 echo "== 1/5 root CA =="
 "$JAVA" -jar "$SIGN_TOOL" generate-ca \
-  -keyAlias "root" -keyAlg "ECC" -keySize "NIST-P-256" \
+  -keyAlias "root" -keyAlg "ECC" -keySize "NIST-P-256" -signAlg "SHA256withECDSA" \
   -subject "C=CN,O=LocalSend,CN=LocalSend Debug Root CA" \
   -keystoreFile "signing.p12" -keystorePwd "$STORE_PWD" -keyPwd "$KEY_PWD" \
   -outFile "rootCA.cer" -validity 3650 > /dev/null
 
 echo "== 2/5 sub CA =="
 "$JAVA" -jar "$SIGN_TOOL" generate-ca \
-  -keyAlias "subca" -keyAlg "ECC" -keySize "NIST-P-256" \
+  -keyAlias "subca" -keyAlg "ECC" -keySize "NIST-P-256" -signAlg "SHA256withECDSA" \
   -issuer "C=CN,O=LocalSend,CN=LocalSend Debug Root CA" -issuerKeyAlias "root" -issuerKeyPwd "$KEY_PWD" \
   -subject "C=CN,O=LocalSend,CN=LocalSend Debug Sub CA" \
   -keystoreFile "signing.p12" -keystorePwd "$STORE_PWD" -keyPwd "$KEY_PWD" \
