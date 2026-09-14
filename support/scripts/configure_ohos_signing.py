@@ -73,6 +73,15 @@ def main() -> int:
     text = text.replace(product_default, '"name": "default",\n        "signingConfig": "ci",', 1)
 
     BUILD_PROFILE.write_text(text, encoding="utf-8")
+
+    # hvigor 26's SignHap task stats a "material" file next to the material
+    # files; write the signing material manifest there as well.
+    material_file = signing_dir / "material"
+    material_file.write_text(
+        json.dumps({"name": "ci", "type": "HarmonyOS", "material": json.loads(signing_config)}, indent=2),
+        encoding="utf-8",
+    )
+
     print("Signing configuration written to", BUILD_PROFILE)
     return 0
 
