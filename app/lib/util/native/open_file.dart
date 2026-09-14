@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:localsend_app/util/native/channel/android_channel.dart' as android_channel;
+import 'package:localsend_app/util/native/channel/ohos_channel.dart' as ohos_channel;
 import 'package:localsend_app/util/native/platform_check.dart';
 import 'package:localsend_app/widget/dialogs/cannot_open_file_dialog.dart';
 import 'package:localsend_isolates/model/file_type.dart';
@@ -19,6 +20,15 @@ Future<void> openFile(
 
   if (filePath.startsWith('content://')) {
     await android_channel.openContentUri(uri: filePath);
+    return;
+  }
+
+  if (checkPlatformIsOhos()) {
+    // The `open_file` package has no HarmonyOS implementation.
+    final opened = await ohos_channel.openPathOhos(path: filePath);
+    if (!opened && context.mounted) {
+      await CannotOpenFileDialog.open(context, filePath, onDeleteTap);
+    }
     return;
   }
 

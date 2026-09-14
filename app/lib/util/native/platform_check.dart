@@ -12,6 +12,12 @@ bool checkPlatformIsNot(List<TargetPlatform> platforms, {bool web = false}) {
   return !checkPlatform(platforms, web: web);
 }
 
+/// HarmonyOS (the flutter-ohos fork reports "ohos" as the operating system).
+/// Intentionally not [TargetPlatform.ohos], which does not compile against the stock Flutter SDK.
+bool checkPlatformIsOhos() {
+  return Platform.operatingSystem == 'ohos';
+}
+
 /// This platform runs on a "traditional" computer
 bool checkPlatformIsDesktop() {
   return checkPlatform([TargetPlatform.linux, TargetPlatform.windows, TargetPlatform.macOS]);
