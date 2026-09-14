@@ -1,0 +1,8 @@
+{
+  "name": "rust_lib_localsend_app",
+  "version": "1.0.0",
+  "description": "Bindings for the core Rust library (HarmonyOS/OHOS FFI plugin)",
+  "author": "LocalSend",
+  "license": "MIT",
+  "dependencies": {}
+}

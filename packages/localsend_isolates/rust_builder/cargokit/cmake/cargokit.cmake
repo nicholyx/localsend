@@ -44,13 +44,23 @@ function(apply_cargokit target manifest_dir lib_name any_symbol_name)
         "CARGOKIT_ROOT_PROJECT_DIR=${CMAKE_SOURCE_DIR}"
     )
 
-    if (WIN32)
+    if(CARGOKIT_TARGET_PLATFORM STREQUAL "ohos-arm64" AND CMAKE_SYSROOT)
+        # Let the build tool know where the OpenHarmony native SDK (sysroot + llvm) lives.
+        get_filename_component(CARGOKIT_OHOS_NATIVE_ROOT "${CMAKE_SYSROOT}/.." REALPATH)
+        list(APPEND CARGOKIT_ENV "CARGOKIT_OHOS_NATIVE_SDK=${CARGOKIT_OHOS_NATIVE_ROOT}")
+    endif()
+
+    if (WIN32 AND NOT CARGOKIT_TARGET_PLATFORM STREQUAL "ohos-arm64")
         set(SCRIPT_EXTENSION ".cmd")
         set(IMPORT_LIB_EXTENSION ".lib")
     else()
-        set(SCRIPT_EXTENSION ".sh")
+        if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+            set(SCRIPT_EXTENSION ".cmd")
+        else()
+            set(SCRIPT_EXTENSION ".sh")
+            execute_process(COMMAND chmod +x "${cargokit_cmake_root}/run_build_tool${SCRIPT_EXTENSION}")
+        endif()
         set(IMPORT_LIB_EXTENSION "")
-        execute_process(COMMAND chmod +x "${cargokit_cmake_root}/run_build_tool${SCRIPT_EXTENSION}")
     endif()
 
     # Using generators in custom command is only supported in CMake 3.20+
@@ -65,6 +75,22 @@ function(apply_cargokit target manifest_dir lib_name any_symbol_name)
                 VERBATIM
             )
         endforeach()
+    elseif (CARGOKIT_TARGET_PLATFORM STREQUAL "ohos-arm64")
+        # The OHOS (HarmonyOS) build consumes the library from a plain directory
+        # (module libs/<arch>) instead of linking it as a CMake target, so the
+        # artifact is additionally copied next to the produced .so for packaging.
+        set(OHOS_TARGET_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../libs/arm64-v8a")
+        add_custom_command(
+            OUTPUT
+            ${OUTPUT_LIB}
+            "${CMAKE_CURRENT_BINARY_DIR}/_phony_"
+            COMMAND ${CMAKE_COMMAND} -E env ${CARGOKIT_ENV}
+            "${cargokit_cmake_root}/run_build_tool${SCRIPT_EXTENSION}" build-cmake
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${OHOS_TARGET_LIB_DIR}"
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OUTPUT_LIB}" "${OHOS_TARGET_LIB_DIR}/lib${CARGOKIT_LIB_NAME}.so"
+            COMMENT "Building and copying ${OUTPUT_LIB} to ${OHOS_TARGET_LIB_DIR}"
+            VERBATIM
+        )
     else()
         add_custom_command(
             OUTPUT

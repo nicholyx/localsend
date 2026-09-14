@@ -49,6 +49,18 @@ class Environment {
   // CMAKE
   static String get targetPlatform => _getEnv("CARGOKIT_TARGET_PLATFORM");
 
+  // OHOS (HarmonyOS): derived from CMAKE_SYSROOT by cargokit.cmake
+  static String? get ohosNativeSdk {
+    final res = Platform.environment["CARGOKIT_OHOS_NATIVE_SDK"];
+    if (res == null || res.isEmpty) {
+      return null;
+    }
+    if (Directory(res).existsSync()) {
+      return Directory(res).resolveSymbolicLinksSync();
+    }
+    return res;
+  }
+
   static String _getEnv(String key) {
     final res = Platform.environment[key];
     if (res == null) {

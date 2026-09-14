@@ -132,6 +132,15 @@ class RustBuilder {
     }
   }
 
+  void prepareForOhos() {
+    // Rust aarch64-unknown-linux-ohos is Tier 2 and ships with the standard
+    // toolchain, so no rustup target installation is required. The linker and
+    // sysroot come from the OpenHarmony SDK via _ohosBuildEnvironment().
+    _log.info(
+      'Skipping rustup preparation for OHOS; using installed stable toolchain',
+    );
+  }
+
   CargoBuildOptions? get _buildOptions =>
       environment.crateOptions.cargo[environment.configuration];
 
@@ -168,7 +177,42 @@ class RustBuilder {
     );
   }
 
+  Map<String, String> _ohosBuildEnvironment() {
+    final sdkRoot = Environment.ohosNativeSdk;
+    if (sdkRoot == null) {
+      throw BuildException(
+        'CARGOKIT_OHOS_NATIVE_SDK is not set. '
+        'OHOS native build requires an SDK path from CMAKE_SYSROOT.',
+      );
+    }
+
+    final clang = path.join(sdkRoot, 'llvm', 'bin', 'clang');
+    final sysroot = path.join(sdkRoot, 'sysroot');
+    if (!File(clang).existsSync()) {
+      throw BuildException('OHOS clang not found at: $clang');
+    }
+
+    return {
+      'RUSTUP_TOOLCHAIN': _getToolchainVersion(environment.manifestDir, _toolchain),
+      'CC_aarch64-unknown-linux-ohos': clang,
+      'CC_aarch64_unknown_linux_ohos': clang,
+      'CFLAGS_aarch64-unknown-linux-ohos':
+          '--sysroot=$sysroot --target=aarch64-unknown-linux-ohos',
+      'CFLAGS_aarch64_unknown_linux_ohos':
+          '--sysroot=$sysroot --target=aarch64-unknown-linux-ohos',
+      'CARGO_TARGET_AARCH64_UNKNOWN_LINUX_OHOS_LINKER': clang,
+      // Target-scoped so that host artifacts (build scripts, proc macros)
+      // are compiled and linked for the build host without OHOS flags.
+      'CARGO_TARGET_AARCH64_UNKNOWN_LINUX_OHOS_RUSTFLAGS':
+          '-C link-arg=--target=aarch64-unknown-linux-ohos -C link-arg=--sysroot=$sysroot',
+    };
+  }
+
   Future<Map<String, String>> _buildEnvironment() async {
+    if (target.ohos != null) {
+      return _ohosBuildEnvironment();
+    }
+
     if (target.android == null) {
       return {};
     } else {

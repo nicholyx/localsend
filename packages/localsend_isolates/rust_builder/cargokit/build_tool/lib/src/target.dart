@@ -15,6 +15,7 @@ class Target {
     this.androidMinSdkVersion,
     this.darwinPlatform,
     this.darwinArch,
+    this.ohos,
   });
 
   static final all = [
@@ -83,6 +84,11 @@ class Target {
       darwinPlatform: 'iphonesimulator',
       darwinArch: 'x86_64',
     ),
+    Target(
+      rust: 'aarch64-unknown-linux-ohos',
+      flutter: 'ohos-arm64',
+      ohos: 'arm64-v8a',
+    ),
   ];
 
   static Target? forFlutterName(String flutterName) {
@@ -108,6 +114,10 @@ class Target {
         .toList(growable: false);
   }
 
+  static List<Target> ohosTargets() {
+    return all.where((element) => element.ohos != null).toList(growable: false);
+  }
+
   /// Returns buildable targets on current host platform ignoring Android targets.
   static List<Target> buildableTargets() {
     if (Platform.isLinux) {
@@ -119,6 +129,10 @@ class Target {
       } else {
         return [Target.forRustTriple('x86_64-unknown-linux-gnu')!];
       }
+    }
+    if (Platform.operatingSystem == 'ohos') {
+      // The OHOS (HarmonyOS) flutter tool builds the aarch64 target only.
+      return [Target.forRustTriple('aarch64-unknown-linux-ohos')!];
     }
     return all.where((target) {
       if (Platform.isWindows) {
@@ -141,4 +155,5 @@ class Target {
   final int? androidMinSdkVersion;
   final String? darwinPlatform;
   final String? darwinArch;
+  final String? ohos;
 }

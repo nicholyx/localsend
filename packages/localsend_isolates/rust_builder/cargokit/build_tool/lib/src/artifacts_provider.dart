@@ -63,10 +63,17 @@ class ArtifactProvider {
       return result;
     }
 
-    final rustup = Rustup();
+    Rustup? rustup;
     for (final target in targets) {
       final builder = RustBuilder(target: target, environment: environment);
-      builder.prepare(rustup);
+      if (target.ohos == null) {
+        rustup ??= Rustup();
+        builder.prepare(rustup);
+      } else {
+        // OHOS targets are Tier 2 (ships with the toolchain); the linker is
+        // configured per-target through the OpenHarmony SDK environment.
+        builder.prepareForOhos();
+      }
       _log.info('Building ${environment.crateInfo.packageName} for $target');
       final targetDir = await builder.build();
       // For local build accept both static and dynamic libraries.
