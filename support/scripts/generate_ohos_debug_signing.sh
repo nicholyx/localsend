@@ -75,7 +75,7 @@ echo "== 4/5 profile keypair + signing certificate =="
 "$JAVA" -jar "$SIGN_TOOL" generate-profile-cert \
   -keyAlias "profile" \
   -issuer "C=CN,O=LocalSend,CN=LocalSend Debug Sub CA" -issuerKeyAlias "subca" -issuerKeyPwd "$KEY_PWD" \
-  -subject "C=CN,O=LocalSend,CN=LocalSend Debug Profile Release" \
+  -subject "C=CN,O=LocalSend,CN=LocalSend Debug Profile Release" -signAlg "SHA256withECDSA" \
   -keystoreFile "signing.p12" -keystorePwd "$STORE_PWD" -keyPwd "$KEY_PWD" \
   -outForm "certChain" -rootCaCertFile "rootCA.cer" -subCaCertFile "subCA.cer" \
   -outFile "profile.cer" -validity 3650 > /dev/null
