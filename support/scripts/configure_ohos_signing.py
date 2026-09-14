@@ -29,7 +29,9 @@ def main() -> int:
     parser.add_argument("--store-password", required=True)
     args = parser.parse_args()
 
-    signing_dir = BUILD_PROFILE.parent / "signing"
+    # hvigor (API 26) expects the signing material to live inside a
+    # directory literally named "material" under the OHOS project.
+    signing_dir = BUILD_PROFILE.parent / "signing" / "material"
     signing_dir.mkdir(parents=True, exist_ok=True)
     store = signing_dir / "signing.p12"
     cert = signing_dir / "signing.cer"
@@ -73,14 +75,6 @@ def main() -> int:
     text = text.replace(product_default, '"name": "default",\n        "signingConfig": "ci",', 1)
 
     BUILD_PROFILE.write_text(text, encoding="utf-8")
-
-    # hvigor 26's SignHap task stats a "material" file next to the material
-    # files; write the signing material manifest there as well.
-    material_file = signing_dir / "material"
-    material_file.write_text(
-        json.dumps({"name": "ci", "type": "HarmonyOS", "material": json.loads(signing_config)}, indent=2),
-        encoding="utf-8",
-    )
 
     print("Signing configuration written to", BUILD_PROFILE)
     return 0
