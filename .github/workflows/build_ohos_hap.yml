@@ -71,7 +71,7 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ env.OHOS_TOOLS_HOME }}
-          key: ohos-commandline-tools-${{ env.OHOS_TOOLS_VERSION }}
+          key: ohos-commandline-tools-${{ env.OHOS_TOOLS_VERSION }}-v2
 
       - name: Download Command Line Tools
         if: steps.cache_tools.outputs.cache-hit != 'true'
@@ -87,6 +87,13 @@ jobs:
           cd /tmp/ohos-tools-split/*/
           cat "${OHOS_TOOLS_BASENAME}.7z."* > "${OHOS_TOOLS_BASENAME}.7z"
           7z x -y -o"$OHOS_TOOLS_HOME" "${OHOS_TOOLS_BASENAME}.7z" > /dev/null
+          # The split 7z wraps an inner commandline-tools-*.zip; extract it too
+          # (7z instead of unzip: it handles zip64 archives above 4 GiB).
+          INNER_ZIP=$(find "$OHOS_TOOLS_HOME" -maxdepth 1 -name "*.zip" | head -1)
+          if [ -n "$INNER_ZIP" ]; then
+            7z x -y -o"$OHOS_TOOLS_HOME" "$INNER_ZIP" > /dev/null
+            rm -f "$INNER_ZIP"
+          fi
           find "$OHOS_TOOLS_HOME" -maxdepth 1 -mindepth 1
 
       - name: Cache flutter-ohos SDK
