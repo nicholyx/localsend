@@ -21,8 +21,9 @@ the rest conversationally.
 
 ## Status (update the checkboxes as you complete each item)
 
-- [ ] Fill backend guidelines
-- [ ] Add code examples
+- [x] Fill guidelines —— 本项目为鸿蒙移植 fork,规范按 harmonyos / flutter / rust 三个
+      领域组织,替代了 init 生成的 backend 模板(不适用)
+- [x] Add code examples —— 每条规则均给出仓库内的真实出处
 
 ---
 

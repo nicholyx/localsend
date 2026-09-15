@@ -21,8 +21,8 @@
   "children": [],
   "parent": null,
   "relatedFiles": [
-    ".trellis/spec/backend/"
+    ".trellis/spec/"
   ],
-  "notes": "First-time setup task created by trellis init (backend project)",
+  "notes": "Spec initialized with HarmonyOS-maintenance conventions (harmonyos/flutter/rust); backend template removed as not applicable.",
   "meta": {}
 }
