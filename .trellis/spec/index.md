@@ -21,14 +21,16 @@
 | `app/ohos/**`、CI 打包、签名、工具链 | [harmonyos/index.md](harmonyos/index.md) —— **必读** |
 | `app/lib/**`、`app/test/**`(Dart/Flutter) | [flutter/index.md](flutter/index.md) |
 | `packages/core`、`packages/localsend_isolates/rust`、`cli`、`server` | [rust/index.md](rust/index.md) |
+| Issue / PR / 里程碑 / 发布 / 开发闭环 | [maintenance/index.md](maintenance/index.md) —— **必读** |
 | 设计判断(该不该做、怎么取舍) | [guides/index.md](guides/index.md) |
 
 ## Pre-Development Checklist(任何任务动手前)
 
 1. 读上表对应的 spec 入口;鸿蒙相关改动再核对 `docs/HARMONYOS.md` 的架构表
 2. 本地基线先跑绿(见下);涉及版本号时检查三处同步(见 harmonyos spec)
-3. GitHub 侧上下文:gh 命令一律带 `-R nicholyx/localsend`(fork 有 upstream/origin
-   双远端,gh 默认解析到上游);流程规则见 `.claude/skills/maintain-loop`
+3. GitHub 侧:gh 命令一律带 `-R nicholyx/localsend`;流程规则见
+   [maintenance/index.md](maintenance/index.md)(小批量提交、测试包不进 release、
+   人工验证是发布硬门禁)
 
 ## Quality Check(任何任务收尾前)
 
