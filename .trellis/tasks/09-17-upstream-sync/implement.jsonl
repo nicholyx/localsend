@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/index.md", "reason": "pre-development checklist + quality check gates for this repo"}
+{"file": ".trellis/spec/harmonyos/index.md", "reason": "ohos target constraints: core features set, platform detection rules, CI packaging gotchas"}
+{"file": ".trellis/spec/rust/index.md", "reason": "core crate (transfer.rs changed upstream) verification commands and feature gating"}
+{"file": ".trellis/spec/flutter/index.md", "reason": "app layer + i18n changes (kg locale, regenerated gen/) verification"}
+{"file": ".trellis/spec/maintenance/index.md", "reason": "branch/PR/CI process rules, test packages never reach release"}
