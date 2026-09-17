@@ -28,7 +28,7 @@ packages/localsend_isolates/rust/Cargo.toml  ← 唯一按 target 分支依赖�
 | 变更 | 影响 | 验证手段 |
 | --- | --- | --- |
 | `transfer.rs` 通道容量 16→4 | 收发文件时的内存占用下降、预读减少;所有平台(含 ohos)行为一致 | 编译通过 + 单测;真机 QA(传输速度/内存) |
-| 新增 `kg` locale | `app/assets/i18n/kg.json` + `app/lib/gen` 重新生成 | `i18n_test.dart`(locale 集合守卫)+ analyze |
+| 新增 `ky` locale | `app/assets/i18n/ky.json` + `app/lib/gen` 重新生成 | `i18n_test.dart`(locale 集合守卫)+ analyze |
 | CI action bumps | 本 fork 有同名工作流(windows exe 用到 azure/*) | actionlint |
 | macOS DMG 修复 | 无 | 无 |
 

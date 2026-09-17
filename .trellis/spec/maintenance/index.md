@@ -15,6 +15,15 @@
   Projects 看板 #2、PR 模板(why/what/trade-offs/testing)
 - 完整操作细节(网络重试、`--head`、body-file 等)见 `.claude/skills/maintain-loop`
 
+## 上游同步(upstream sync)
+
+fork 与上游是两条线:上游更新要定期并入,合并即等于把相关修复"移植"到鸿蒙端
+(同一份 `packages/core` + `app/lib`)。**完整流程、校验矩阵与踩坑见
+[upstream-sync.md](upstream-sync.md)** —— 动手前必读,别凭直觉 `git pull`。
+
+最近一次:2026-09-17 合并上游 6 个提交(PR #9),发现并修复上游自身也缺的
+`AppLocale.ky` 穷举 switch 缺口。
+
 ## 盘点(每轮开始)
 
 ```bash
