@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/index.md", "reason": "quality check checklist to verify against before finishing"}
+{"file": ".trellis/spec/harmonyos/index.md", "reason": "verify no ohos constraint regressions (TargetPlatform.ohos, features, ArkTS strictness)"}
+{"file": ".trellis/spec/maintenance/index.md", "reason": "verify PR/CI/HAP-artifact process was followed"}
