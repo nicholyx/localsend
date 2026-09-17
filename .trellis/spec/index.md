@@ -22,6 +22,7 @@
 | `app/lib/**`、`app/test/**`(Dart/Flutter) | [flutter/index.md](flutter/index.md) |
 | `packages/core`、`packages/localsend_isolates/rust`、`cli`、`server` | [rust/index.md](rust/index.md) |
 | Issue / PR / 里程碑 / 发布 / 开发闭环 | [maintenance/index.md](maintenance/index.md) —— **必读** |
+| 合并上游(localsend/localsend)的更新 | [maintenance/upstream-sync.md](maintenance/upstream-sync.md) —— **必读** |
 | 设计判断(该不该做、怎么取舍) | [guides/index.md](guides/index.md) |
 
 ## Pre-Development Checklist(任何任务动手前)
