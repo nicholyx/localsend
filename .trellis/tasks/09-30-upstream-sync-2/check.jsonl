@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/maintenance/upstream-sync.md", "reason": "verify the sync followed the documented gates (conflict resolution, no pre-existing fixes, gen zero-drift)"}
+{"file": ".trellis/spec/harmonyos/index.md", "reason": "verify no ohos regression: directories.dart keeps if/else, features unchanged, no TargetPlatform.ohos"}
+{"file": ".trellis/spec/rust/index.md", "reason": "verify the new connection_limit feature compiles under the ohos feature set"}
+{"file": ".trellis/spec/maintenance/index.md", "reason": "verify PR/branch/HAP-artifact process compliance"}

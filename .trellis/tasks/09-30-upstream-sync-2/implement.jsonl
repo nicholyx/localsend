@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/maintenance/upstream-sync.md", "reason": "the exact process for this task: merge strategy, conflict principles, verification gates, pitfalls"}
+{"file": ".trellis/spec/index.md", "reason": "pre-development checklist + quality gates"}
+{"file": ".trellis/spec/harmonyos/index.md", "reason": "ohos constraints: no TargetPlatform.ohos, core feature set, ArkTS strictness"}
+{"file": ".trellis/spec/rust/index.md", "reason": "core crate changed upstream (new connection_limit.rs, hyper features) - verification commands"}
+{"file": ".trellis/spec/flutter/index.md", "reason": "app layer changes: directories.dart conflict resolution, save-path/symlink behavior"}
+{"file": ".trellis/spec/maintenance/index.md", "reason": "PR/CI process rules and repo conventions"}
