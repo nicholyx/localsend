@@ -118,7 +118,35 @@ git worktree remove --force /tmp/ls-main
 
 若在干净 `main` 上同样失败 → 既有问题,登记 Issue(先例:#10),不要塞进同步 PR。
 
-### 4. GitHub 侧
+### 4. fork 的修复与上游收敛:零冲突 vs 同义冲突
+
+第一轮同步时 fork 自己补了 `AppLocale.ky`(上游当时漏了);第二轮同步上游**独立**
+修了同一处(`03317bc2`),且字符串与 fork 的**逐字一致**(`'Кыргызча'`)→ git 直接
+零冲突合并,无需人工处理。
+
+判别与处理:
+
+| 情形 | git 行为 | 处理 |
+| --- | --- | --- |
+| 双方改动完全相同(逐字) | 自动合并,无冲突 | 什么都不用做;顺带确认 fork 的修复判断正确 |
+| 双方同义但措辞/写法不同(如大小写、用词) | 报内容冲突 | **以上游为准**,在 PR 正文里记一句"fork 的同类修复已被上游覆盖" |
+| 上游改了 fork 依赖的结构(如把 if/else 改回 switch) | 报内容冲突 | 按 spec 的平台规则解(如鸿蒙要求 if/else),把上游逻辑**搬进** fork 的结构 |
+
+### 5. 本机网络:代理失效时的绕行
+
+本机环境变量长期指向一个本地代理(`http(s)_proxy=http://127.0.0.1:56134`)。**代理没开时**:
+
+- `git`/`gh` 全部报 `proxyconnect ... connection refused` 或 `EOF`
+- 绕行方式(不改用户配置):
+  - **git** 走 SSH:`git fetch git@github.com:<owner>/<repo>.git main:refs/remotes/upstream/main --tags`,
+    推送用临时 remote `git remote add ssh-origin git@github.com:nicholyx/localsend.git` +
+    `git push ssh-origin HEAD:<branch>`(用完可 `git remote remove ssh-origin`)
+  - **gh** 清代理变量:`env -u https_proxy -u http_proxy -u all_proxy -u HTTPS_PROXY -u HTTP_PROXY -u ALL_PROXY gh ...`(直连可用)
+  - **flutter/dart** 加 `--offline`(pub get)或 `--no-pub`(analyze/test)——否则隐式
+    `pub get` 会卡在失效代理上直到超时
+- `gh pr create` 在分支推送到 ssh-origin 后需 `--head <owner>:<branch>`(gh 只认 origin)
+
+### 6. GitHub 侧
 
 gh 一律 `-R nicholyx/localsend`(多远端下默认解析到上游);推当前分支用
 `git push origin HEAD`。详见 [index.md](index.md)。
